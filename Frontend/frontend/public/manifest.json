@@ -1,0 +1,14 @@
+{
+  "short_name": "HeartPredict",
+  "name": "HeartPredict - Heart Disease Risk Assessment",
+  "icons": [
+    {
+      "src": "icon.png",
+      "type": "image/png",
+      "sizes": "32x32 64x64 192x192 512x512"
+    }
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}

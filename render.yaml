@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: cardiopredict-backend
+    runtime: python
+    plan: free
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: gunicorn --chdir backend app:app
+    envVars:
+      - key: FIREBASE_DATABASE_URL
+        value: https://heart-7d7ce-default-rtdb.asia-southeast1.firebasedatabase.app/
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+

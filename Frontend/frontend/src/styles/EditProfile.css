@@ -1,0 +1,139 @@
+.edit-profile-container {
+  min-height: 100vh;
+  background: #f3f4f6;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 40px 20px;
+}
+
+.edit-profile-card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 420px;
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.edit-profile-card h1 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+/* PROFILE */
+.profile-picture-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.preview-image,
+.avatar-placeholder {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 3px solid #ef4444;
+  object-fit: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: bold;
+  background: #ef4444;
+  color: white;
+}
+
+.upload-label {
+  padding: 8px 16px;
+  background: #ef4444;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.upload-label:hover {
+  background: #dc2626;
+}
+
+.upload-hint {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* INPUT */
+.form-group {
+  margin-bottom: 14px;
+}
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+}
+
+.form-group input:focus {
+  border-color: #ef4444;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.1);
+}
+
+/* BUTTONS */
+.button-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.btn-cancel {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+.btn-save {
+  flex: 1;
+  padding: 10px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 8px;
+}
+
+.btn-save:hover {
+  background: #dc2626;
+}
+
+/* MESSAGES */
+.error-message {
+  background: #fee;
+  padding: 10px;
+  color: #c33;
+  border-radius: 6px;
+}
+
+.success-message {
+  background: #efe;
+  padding: 10px;
+  color: #2e7d32;
+  border-radius: 6px;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+}

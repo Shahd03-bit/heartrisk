@@ -1,0 +1,36 @@
+.doctor-feedback {
+  margin-top: 16px;
+}
+
+.df-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.df-textarea {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px;
+  resize: vertical;
+  font-size: 14px;
+}
+
+.df-actions {
+  margin-top: 10px;
+}
+
+.df-submit {
+  background-color: #ef4444;
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.df-error {
+  color: #dc2626;
+  margin-top: 8px;
+}

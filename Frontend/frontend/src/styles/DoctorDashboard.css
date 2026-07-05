@@ -1,0 +1,586 @@
+/* ================================
+   DOCTOR DASHBOARD STYLING
+   ================================ */
+
+.dashboard-container {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ======== HEADER SECTION ======== */
+
+.dashboard-header {
+  background: white;
+  padding: 16px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-bottom: 2px solid #3498db;
+}
+
+.header-left {
+  flex: 1;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 700;
+  font-size: 18px;
+  color: #1f2937;
+}
+
+.heart-icon {
+  font-size: 24px;
+}
+
+.logo-text {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 14px;
+}
+
+.user-email {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.btn-logout {
+  padding: 8px 20px !important;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+  color: white !important;
+  font-weight: 600 !important;
+  border-radius: 6px !important;
+  transition: all 0.3s ease !important;
+}
+
+.btn-logout:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+/* ======== MAIN CONTENT AREA ======== */
+
+.dashboard-main {
+  flex: 1;
+  padding: 32px;
+  overflow-y: auto;
+}
+
+.welcome-section {
+  margin-bottom: 32px;
+  animation: slideDown 0.5s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.welcome-title {
+  font-weight: 700 !important;
+  color: #1f2937 !important;
+  margin-bottom: 8px;
+}
+
+.welcome-subtitle {
+  color: #6b7280 !important;
+  font-size: 14px !important;
+}
+
+/* ======== STATISTICS CARDS ======== */
+
+.stats-grid {
+  margin-bottom: 32px !important;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  overflow: hidden;
+  color: #1f2937;
+  position: relative;
+  border: 1px solid #e5e7eb;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  transition: left 0.3s ease;
+}
+
+.stat-card:hover::before {
+  left: 100%;
+}
+
+.stat-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.stat-card > div {
+  position: relative;
+  z-index: 1;
+}
+
+.stat-card-blue {
+  border-top: 4px solid #3498db;
+}
+
+.stat-card-red {
+  border-top: 4px solid #ef4444;
+}
+
+.stat-card-orange {
+  border-top: 4px solid #f97316;
+}
+
+.stat-card-green {
+  border-top: 4px solid #22c55e;
+}
+
+.stat-icon {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  opacity: 0.9;
+}
+
+.stat-value {
+  font-weight: 700 !important;
+  font-size: 32px !important;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #6b7280 !important;
+}
+
+.stat-hint {
+  font-size: 11px !important;
+  margin-top: 4px;
+  color: #9ca3af !important;
+}
+
+/* ======== SEARCH & FILTER CARD ======== */
+
+.search-filter-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  margin-bottom: 32px;
+}
+
+.search-field {
+  border-radius: 8px;
+}
+
+.search-field .MuiOutlinedInput-root {
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+.search-field .MuiOutlinedInput-root:hover {
+  background: #f3f4f6;
+}
+
+.filter-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  padding: 6px 16px !important;
+  transition: all 0.3s ease !important;
+}
+
+.filter-all.MuiButton-outlined {
+  border-color: #d1d5db;
+  color: #6b7280;
+}
+
+.filter-all.MuiButton-outlined:hover {
+  background: #f3f4f6;
+}
+
+.filter-all.MuiButton-contained {
+  background: #1f2937;
+  color: white;
+}
+
+.filter-high.MuiButton-outlined {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.filter-high.MuiButton-outlined:hover {
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.filter-high.MuiButton-contained {
+  background: #ef4444;
+  color: white;
+}
+
+.filter-moderate.MuiButton-outlined {
+  border-color: #f97316;
+  color: #f97316;
+}
+
+.filter-moderate.MuiButton-outlined:hover {
+  background: rgba(249, 115, 22, 0.05);
+}
+
+.filter-moderate.MuiButton-contained {
+  background: #f97316;
+  color: white;
+}
+
+.filter-low.MuiButton-outlined {
+  border-color: #22c55e;
+  color: #22c55e;
+}
+
+.filter-low.MuiButton-outlined:hover {
+  background: rgba(34, 197, 94, 0.05);
+}
+
+.filter-low.MuiButton-contained {
+  background: #22c55e;
+  color: white;
+}
+
+/* ======== PATIENTS TABLE ======== */
+
+.patients-table-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.table-content {
+  padding: 0 !important;
+}
+
+.table-header {
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.table-header th {
+  font-weight: 700 !important;
+  color: #374151 !important;
+  font-size: 13px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 16px !important;
+}
+
+.table-row {
+  border-bottom: 1px solid #f0f1f3;
+  transition: background-color 0.2s ease;
+}
+
+.table-row:hover {
+  background-color: #f9fafb;
+}
+
+.table-row td {
+  padding: 16px !important;
+  font-size: 14px;
+}
+
+.patient-name-cell {
+  font-weight: 600 !important;
+  color: #1f2937;
+}
+
+.risk-percentage {
+  color: #374151;
+  font-size: 13px;
+}
+
+.no-data {
+  padding: 48px 16px !important;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+/* ======== ACTION BUTTONS ======== */
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.btn-view {
+  color: #3498db !important;
+  font-weight: 600 !important;
+  text-transform: capitalize;
+}
+
+.btn-view:hover {
+  background: rgba(52, 152, 219, 0.1) !important;
+}
+
+.btn-feedback {
+  color: #22c55e !important;
+  font-weight: 600 !important;
+  text-transform: capitalize;
+}
+
+.btn-feedback:hover {
+  background: rgba(34, 197, 94, 0.1) !important;
+}
+
+/* ======== MODALS ======== */
+
+.MuiDialog-paper {
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1) !important;
+}
+
+.MuiDialogTitle-root {
+  font-weight: 700 !important;
+  padding: 20px !important;
+}
+
+.MuiDialogContent-root {
+  padding: 24px !important;
+}
+
+.MuiDialogActions-root {
+  padding: 16px !important;
+  gap: 8px;
+}
+
+/* ======== RESPONSIVE DESIGN ======== */
+
+@media (max-width: 768px) {
+  .dashboard-header {
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .header-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .dashboard-main {
+    padding: 16px;
+  }
+
+  .stats-grid {
+    margin-bottom: 24px !important;
+  }
+
+  .stat-value {
+    font-size: 24px !important;
+  }
+
+  .filter-buttons {
+    width: 100%;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .btn-view,
+  .btn-feedback {
+    width: 100%;
+    padding: 6px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-text {
+    display: none;
+  }
+
+  .user-details {
+    display: none;
+  }
+
+  .user-info {
+    gap: 8px;
+  }
+
+  .user-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 14px;
+  }
+
+  .welcome-title {
+    font-size: 20px !important;
+  }
+
+  .stat-card-blue,
+  .stat-card-red,
+  .stat-card-orange,
+  .stat-card-green {
+    margin-bottom: 12px;
+  }
+
+  .table-header th {
+    font-size: 11px !important;
+    padding: 12px !important;
+  }
+
+  .table-row td {
+    padding: 12px !important;
+    font-size: 12px;
+  }
+}
+
+/* ======== SCROLLBAR STYLING ======== */
+
+.dashboard-main::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dashboard-main::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+}
+
+.dashboard-main::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
+
+.dashboard-main::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* ======== ANIMATIONS ======== */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.stat-card {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.stat-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.stat-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.stat-card:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.stat-card:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+/* ======== MATERIAL-UI OVERRIDES ======== */
+
+.MuiChip-root {
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+}
+
+.MuiButton-contained {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+.MuiButton-contained:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.MuiTextField-root {
+  width: 100%;
+}
+
+.MuiOutlinedInput-root {
+  border-radius: 8px;
+}
+
+.MuiCard-root {
+  border-radius: 12px;
+}
+
+.MuiTable-root {
+  border-collapse: collapse;
+}

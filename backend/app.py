@@ -1,8 +1,16 @@
+"""Flask backend for heart-disease risk prediction and patient-doctor sharing.
+
+The API accepts patient data, runs the trained ML model, stores assessment
+results in Firebase, and exposes endpoints for registration, sharing, and
+doctor dashboard workflows.
+"""
+
 from flask import Flask, request, jsonify, g
 from flask_cors import CORS
 import pickle
 import pandas as pd
 import os
+import json
 import uuid
 import firebase_admin
 from firebase_admin import credentials, db, firestore, auth as firebase_auth
@@ -12,6 +20,7 @@ import logging
 
 app = Flask(__name__)
 
+# Allow the frontend to call this API from local development hosts.
 DEFAULT_CORS_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
@@ -24,37 +33,64 @@ CORS(app, resources={r"/*": {"origins": cors_origins}})
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("heart_backend")
 
+
+@app.route("/", methods=["GET"])
+def home():
+    return jsonify({
+        "message": "Real-Time Heart Disease Prediction API",
+        "status": "running",
+        "version": "1.0"
+    }), 200
+
 # --- 1. FIREBASE INITIALIZATION ---
+# Firebase powers identity, user profiles, assessments, and shared reports.
 firebase_initialized = False
 firestore_client = None
 try:
-    if os.path.exists("serviceAccountKey.json"):
-        cred = credentials.Certificate("serviceAccountKey.json")
+    firebase_service_account_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
+    firebase_database_url = os.getenv(
+        "FIREBASE_DATABASE_URL",
+        "https://heart-7d7ce-default-rtdb.asia-southeast1.firebasedatabase.app/"
+    )
+
+    if firebase_service_account_json:
+        cred = credentials.Certificate(json.loads(firebase_service_account_json))
         firebase_admin.initialize_app(cred, {
-            'databaseURL': 'https://heart-7d7ce-default-rtdb.asia-southeast1.firebasedatabase.app/'
+            'databaseURL': firebase_database_url
         })
         firebase_initialized = True
         firestore_client = firestore.client()
-        print("✓ Firebase connected")
+        logger.info("✓ Firebase connected from environment")
+    elif os.path.exists("serviceAccountKey.json"):
+        cred = credentials.Certificate("serviceAccountKey.json")
+        firebase_admin.initialize_app(cred, {
+            'databaseURL': firebase_database_url
+        })
+        firebase_initialized = True
+        firestore_client = firestore.client()
+        logger.info("✓ Firebase connected")
     else:
-        print("⚠ serviceAccountKey.json not found - Firebase disabled")
+        logger.warning("serviceAccountKey.json not found - Firebase disabled")
 except Exception as e:
-    print(f"⚠ Firebase failed to initialize: {e}")
+    logger.exception("Firebase failed to initialize: %s", e)
 
 # --- 2. ML ASSET LOADING ---
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MODEL_PATH = os.path.join(BASE_DIR, "ML model", "heart_disease_model.pkl")
-SCALER_PATH = os.path.join(BASE_DIR, "ML model", "scaler.pkl")
+# The trained model and scaler are loaded once and reused for each prediction.
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(BASE_DIR, "heart_disease_model.pkl")
+SCALER_PATH = os.path.join(BASE_DIR, "scaler.pkl")
 
 model = None
 scaler = None
 
 
 def utc_now_iso():
+    # Consistent UTC timestamps for records written to Firebase.
     return datetime.now(timezone.utc).isoformat()
 
 
 def json_error(status_code, message, details=None):
+    # Standard error payload used by most API endpoints.
     payload = {"success": False, "error": message}
     if details:
         payload["details"] = details
@@ -67,6 +103,7 @@ def log_request():
 
 
 def get_bearer_token():
+    # Extract Firebase ID tokens from Authorization headers.
     auth_header = request.headers.get("Authorization", "")
     if not auth_header.startswith("Bearer "):
         return None
@@ -74,6 +111,7 @@ def get_bearer_token():
 
 
 def verify_request_token():
+    # Validate the caller and attach the decoded token to the request context.
     if not firebase_initialized:
         return None, json_error(500, "Firebase not initialized")
 
@@ -91,6 +129,7 @@ def verify_request_token():
 
 
 def get_user_role(uid, decoded_token=None):
+    # Resolve the user's role from token claims first, then persistent storage.
     if decoded_token:
         claims_role = decoded_token.get("role")
         if claims_role:
@@ -116,6 +155,7 @@ def get_user_role(uid, decoded_token=None):
 
 
 def require_roles(allowed_roles):
+    # Guard endpoints that should only be reachable by specific user roles.
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -138,6 +178,7 @@ def require_roles(allowed_roles):
 
 
 def get_assessment_for_user(user_id, assessment_id):
+    # Look up an assessment from either Firestore or the RTDB legacy structure.
     if firestore_client is not None:
         fs_doc = firestore_client.collection("assessments").document(assessment_id).get()
         if fs_doc.exists:
@@ -224,6 +265,7 @@ def save_user_to_rtdb(uid, user_data):
         print(f"   Email: {user_data.get('email')}")
         print(f"   Role: {user_data.get('role')}")
 
+        # Normalize incoming registration payloads from different frontend forms.
         first_name = user_data.get("firstName", user_data.get("first_name", ""))
         last_name = user_data.get("lastName", user_data.get("last_name", ""))
         full_name = (user_data.get("full_name") or f"{first_name} {last_name}").strip()
@@ -246,7 +288,7 @@ def save_user_to_rtdb(uid, user_data):
         if user_data.get("profilePicture"):
             user_doc["profilePicture"] = user_data.get("profilePicture")
 
-        # Patient: store doctor_id and doctor_code supplied from registration
+        # Patients keep a direct link to their doctor for dashboard and sharing flows.
         if user_data.get("doctor_id"):
             user_doc["doctor_id"] = user_data.get("doctor_id")
             print(f"   Doctor ID (linked): {user_data.get('doctor_id')}")
@@ -254,7 +296,7 @@ def save_user_to_rtdb(uid, user_data):
             user_doc["doctor_code"] = user_data.get("doctor_code").upper()
             print(f"   Doctor Code (linked): {user_doc['doctor_code']}")
 
-        # Doctor: generate a unique access code
+        # Doctors get a unique access code so patients can verify and link to them.
         doctor_code = None
         if user_doc["role"] == "doctor":
             doctor_code = generate_doctor_access_code()
@@ -296,11 +338,10 @@ def save_user_to_rtdb(uid, user_data):
 @app.route('/auth/register-user', methods=['POST'])
 def register_user():
     """
-    Create a new user in RTDB users table.
-    Called from the frontend during registration.
-    This is the single source of truth for user creation — the frontend
-    must NOT call setUserRoleInRTDB afterwards, as that would overwrite
-    this record and drop doctor_id.
+    Create a new user record in RTDB.
+
+    This endpoint is the single source of truth for registration so the
+    frontend does not overwrite the user profile after the initial write.
     """
     try:
         data = request.get_json()
@@ -343,6 +384,7 @@ def get_user(uid):
 
 
 def _report_to_payload(report_id, report_data):
+    # Attach the report id and normalize missing comment collections.
     report = report_data or {}
     report["report_id"] = report_id
     report["comments"] = report.get("comments") or {}
@@ -350,6 +392,7 @@ def _report_to_payload(report_id, report_data):
 
 
 def _find_report(report_id):
+    # Shared reports are stored in a flat RTDB branch for dashboard queries.
     if not firebase_initialized:
         return None
     report = db.reference(f"sharedReports/{report_id}").get()
@@ -359,6 +402,7 @@ def _find_report(report_id):
 
 
 def _get_comments(report_id):
+    # Return comments sorted by timestamp so the latest feedback appears last.
     if not firebase_initialized:
         return []
     comments = db.reference(f"sharedReports/{report_id}/comments").get() or {}
@@ -371,25 +415,37 @@ def _get_comments(report_id):
 
 
 def load_assets():
+    # Load the ML model and scaler from disk before the prediction endpoint runs.
     global model, scaler
+    if model is not None and scaler is not None:
+        return True
+
     try:
         with open(MODEL_PATH, 'rb') as f:
             model = pickle.load(f)
+        logger.info("✓ ML model loaded")
         with open(SCALER_PATH, 'rb') as f:
             scaler = pickle.load(f)
-        print("✓ ML Assets loaded")
+        logger.info("✓ Scaler loaded")
         return True
     except Exception as e:
-        print(f"⚠ Failed to load ML assets: {e}")
+        logger.exception("Failed to load ML assets: %s", e)
         return False
+
+
+load_assets()
 
 
 # --- 3. PREDICTION & SAVE LOGIC ---
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
+        if model is None or scaler is None:
+            return jsonify({"error": "ML model is not loaded"}), 500
+
         data = request.get_json()
 
+        # Build the model input from the form fields sent by the frontend.
         user_id = data.get('user_id')
         if not user_id:
             return jsonify({"error": "user_id is required"}), 400
@@ -414,6 +470,7 @@ def predict():
             'exang': [exang]
         })
 
+        # Scale features, run the classifier, then convert the probability to a percentage.
         scaled_features = scaler.transform(input_df)
         prediction = int(model.predict(scaled_features)[0])
         probability = model.predict_proba(scaled_features)[0]
@@ -436,6 +493,7 @@ def predict():
                 print(f"\n💾 [FIREBASE] Saving assessment {assessment_id}")
                 print(f"💾 [FIREBASE] doctor_id: {doctor_id}")
 
+                # Store the result in both the new flat structure and the older nested path.
                 assessment_payload = {
                     "assessment_id": assessment_id,
                     "user_id": user_id,
@@ -512,6 +570,7 @@ def predict():
 # --- 4. HEALTH CHECK ---
 @app.route('/health', methods=['GET'])
 def health():
+    # Lightweight endpoint used by deployment checks and monitoring.
     return jsonify({
         "status": "ok",
         "firebase": "connected" if firebase_initialized else "disconnected",
@@ -582,6 +641,7 @@ def share_assessment(assessment_id):
         if not firebase_initialized:
             return json_error(500, "Firebase is not initialized")
 
+        # Patients can share one assessment with an optional doctor target.
         patient_id = g.user_uid
         payload = request.get_json(silent=True) or {}
         doctor_id = payload.get('doctor_id')
@@ -770,6 +830,7 @@ def add_doctor_comment(report_id):
 # --- 6. DOCTOR PATIENT MANAGEMENT ---
 
 def categorize_risk(risk_percentage):
+    # Map the numeric score into the buckets shown in dashboard widgets.
     if risk_percentage >= 70:
         return 'high'
     elif risk_percentage >= 40:
@@ -1045,6 +1106,7 @@ def lookup_doctor_by_access_code(access_code):
     Used by patients during registration to verify and link to a doctor.
     """
     try:
+        # Normalize the code so users can enter it in any casing.
         access_code = access_code.strip().upper()
 
         if not access_code.startswith('DR') or len(access_code) != 8:
@@ -1090,12 +1152,14 @@ def lookup_doctor_by_access_code(access_code):
 
 
 if __name__ == '__main__':
+    # Local development entrypoint: verify assets and start the Flask server.
+    logger.info("✓ Flask started")
     print("\n" + "=" * 50)
     print("🚀 Starting Flask Backend")
     print("=" * 50)
 
     if load_assets():
         print("\n🎯 All systems ready!\n")
-        app.run(debug=True, port=5000)
+        app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")), debug=os.getenv("FLASK_DEBUG", "false").lower() == "true")
     else:
         print("\n❌ Failed to load ML assets. Exiting.\n")
