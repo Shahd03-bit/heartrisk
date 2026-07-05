@@ -475,6 +475,15 @@ def predict():
 
         data = request.get_json()
 
+        # Runtime compatibility check: ensure LogisticRegression has required attributes
+        try:
+            cls_name = getattr(model, '__class__', None).__name__ if getattr(model, '__class__', None) else ''
+            if 'LogisticRegression' in cls_name and not hasattr(model, 'multi_class'):
+                setattr(model, 'multi_class', 'ovr')
+                logger.warning("Patched LogisticRegression in predict(): set missing 'multi_class'='ovr'")
+        except Exception as compat_err:
+            logger.exception("Compatibility shim inside predict() failed: %s", compat_err)
+
         # Build the model input from the form fields sent by the frontend.
         user_id = data.get('user_id')
         if not user_id:
