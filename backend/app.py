@@ -20,6 +20,14 @@ import logging
 
 import sys
 import builtins
+try:
+    import sklearn
+    SKLEARN_VERSION = getattr(sklearn, "__version__", "unknown")
+except Exception:
+    sklearn = None
+    SKLEARN_VERSION = "not-installed"
+
+PY_VERSION = sys.version.split('\n')[0]
 
 def safe_print(*args, **kwargs):
     try:
@@ -441,19 +449,16 @@ def load_assets():
         with open(MODEL_PATH, 'rb') as f:
             model = pickle.load(f)
         logger.info("✓ ML model loaded")
-        # Compatibility shim: some LogisticRegression models pickled
-        # with a different scikit-learn version may be missing attributes
-        # like `multi_class` when loaded in another environment. Patch
-        # common missing attributes to avoid runtime AttributeErrors.
+        # NOTE: Do NOT monkey-patch model attributes here. If the model
+        # was trained with a different scikit-learn version, it must be
+        # re-saved (repickled) using the same scikit-learn version as
+        # the production environment. We log the model class for
+        # diagnostics.
         try:
             cls_name = getattr(model, '__class__', None).__name__ if getattr(model, '__class__', None) else ''
-            if 'LogisticRegression' in cls_name:
-                if not hasattr(model, 'multi_class'):
-                    # default to 'ovr' which is safe for binary classifiers
-                    setattr(model, 'multi_class', 'ovr')
-                    logger.warning("Patched LogisticRegression: set missing attribute 'multi_class'='ovr' for compatibility")
-        except Exception as shim_err:
-            logger.exception("Compatibility shim failed: %s", shim_err)
+            logger.info("Loaded model class: %s", cls_name)
+        except Exception:
+            logger.exception("Failed to inspect loaded model class")
         with open(SCALER_PATH, 'rb') as f:
             scaler = pickle.load(f)
         logger.info("✓ Scaler loaded")
@@ -474,15 +479,8 @@ def predict():
             return jsonify({"error": "ML model is not loaded"}), 500
 
         data = request.get_json()
-
-        # Runtime compatibility check: ensure LogisticRegression has required attributes
-        try:
-            cls_name = getattr(model, '__class__', None).__name__ if getattr(model, '__class__', None) else ''
-            if 'LogisticRegression' in cls_name and not hasattr(model, 'multi_class'):
-                setattr(model, 'multi_class', 'ovr')
-                logger.warning("Patched LogisticRegression in predict(): set missing 'multi_class'='ovr'")
-        except Exception as compat_err:
-            logger.exception("Compatibility shim inside predict() failed: %s", compat_err)
+        
+        # Build the model input from the form fields sent by the frontend.
 
         # Build the model input from the form fields sent by the frontend.
         user_id = data.get('user_id')
@@ -509,10 +507,28 @@ def predict():
             'exang': [exang]
         })
 
-        # Scale features, run the classifier, then convert the probability to a percentage.
+        # Scale features and run the classifier.
         scaled_features = scaler.transform(input_df)
-        prediction = int(model.predict(scaled_features)[0])
-        probability = model.predict_proba(scaled_features)[0]
+        try:
+            prediction = int(model.predict(scaled_features)[0])
+            probability = model.predict_proba(scaled_features)[0]
+        except AttributeError as attr_err:
+            # This is commonly caused by a scikit-learn version mismatch
+            # between the environment where the model was pickled and the
+            # current runtime. Do NOT attempt to silently patch the model
+            # here; instead return a clear error and instructions.
+            logger.exception("Model attribute error during prediction: %s", attr_err)
+            return jsonify({
+                "error": "Model runtime incompatibility: missing attribute during prediction.",
+                "details": str(attr_err),
+                "server_python_version": PY_VERSION,
+                "server_sklearn_version": SKLEARN_VERSION,
+                "advice": (
+                    "Repickle the trained model using the same scikit-learn "
+                    "version as the server (see server_sklearn_version) or "
+                    "pin the server to the training scikit-learn version in requirements.txt."
+                )
+            }), 500
         risk_score = round(float(probability[1] * 100), 2)
 
         result = {
