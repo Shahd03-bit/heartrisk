@@ -441,6 +441,19 @@ def load_assets():
         with open(MODEL_PATH, 'rb') as f:
             model = pickle.load(f)
         logger.info("✓ ML model loaded")
+        # Compatibility shim: some LogisticRegression models pickled
+        # with a different scikit-learn version may be missing attributes
+        # like `multi_class` when loaded in another environment. Patch
+        # common missing attributes to avoid runtime AttributeErrors.
+        try:
+            cls_name = getattr(model, '__class__', None).__name__ if getattr(model, '__class__', None) else ''
+            if 'LogisticRegression' in cls_name:
+                if not hasattr(model, 'multi_class'):
+                    # default to 'ovr' which is safe for binary classifiers
+                    setattr(model, 'multi_class', 'ovr')
+                    logger.warning("Patched LogisticRegression: set missing attribute 'multi_class'='ovr' for compatibility")
+        except Exception as shim_err:
+            logger.exception("Compatibility shim failed: %s", shim_err)
         with open(SCALER_PATH, 'rb') as f:
             scaler = pickle.load(f)
         logger.info("✓ Scaler loaded")
