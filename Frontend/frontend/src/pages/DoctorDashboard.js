@@ -40,7 +40,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
   Typography,
   Dialog,
   DialogTitle,
@@ -121,7 +120,7 @@ function DoctorDashboard() {
           return false;
         }
         setUser({ ...parsedUser, role: normalizedRole });
-        console.log(user);
+        console.log(parsedUser);
         return true;
       } catch (err) {
         console.error('❌ [DOCTOR_DASHBOARD] Error parsing user:', err);

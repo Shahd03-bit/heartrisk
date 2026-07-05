@@ -69,6 +69,7 @@ function DoctorFeedbackDisplay({ patientId }) {
         if (unsub) unsub();
       });
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientId]);
 
   if (loading) {

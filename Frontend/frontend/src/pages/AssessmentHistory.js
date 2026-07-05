@@ -36,7 +36,7 @@ function AssessmentHistory() {
         setAssessments(sorted);
         setFiltered(sorted);
       });
-  }, []);
+  }, [navigate]);
 
   // FILTER + SEARCH
   useEffect(() => {

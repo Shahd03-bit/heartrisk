@@ -1,22 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import '../styles/AssessmentResults.css';
-import ShareWithDoctorModal from '../components/ShareWithDoctorModal';
-import { subscribeToReportComments, fetchReportsByAssessmentRTDB } from '../utils/firebaseUtils';
+// import { fetchReportsByAssessmentRTDB } from '../utils/firebaseUtils';
 
 function AssessmentResults() {
   const navigate = useNavigate();
   const location = useLocation();
   const [result, setResult] = useState(null);
-  const [user, setUser] = useState(null);
+  // const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showShareModal, setShowShareModal] = useState(false);
-  const [sharedReports, setSharedReports] = useState([]);
-  const [allComments, setAllComments] = useState([]);
+  // const [showShareModal, setShowShareModal] = useState(false);
+  // const [sharedReports, setSharedReports] = useState([]);
+  // const [allComments, setAllComments] = useState([]);
 
-  const assessmentId = location.state?.assessmentId || location.state?.prediction?.assessment_id;
-  const assignedDoctorId = location.state?.doctorId;
-  const patientName = location.state?.patientName;
+  // const assessmentId = location.state?.assessmentId || location.state?.prediction?.assessment_id;
+  // const assignedDoctorId = location.state?.doctorId;
+  // const patientName = location.state?.patientName;
 
   // Initialize user and assessment results
   useEffect(() => {
@@ -27,59 +26,59 @@ function AssessmentResults() {
       return;
     }
 
-    const stored = localStorage.getItem('user');
-    if (stored) {
-      try {
-        setUser(JSON.parse(stored));
-      } catch (e) {
-        console.error('Error parsing user:', e);
-      }
-    }
+    // const stored = localStorage.getItem('user');
+    // if (stored) {
+    //   try {
+    //     setUser(JSON.parse(stored));
+    //   } catch (e) {
+    //     console.error('Error parsing user:', e);
+    //   }
+    // }
     setLoading(false);
   }, [location, navigate]);
 
   // Load shared reports for this assessment only
-  useEffect(() => {
-    if (!assessmentId || user?.role === 'doctor') {
-      return;
-    }
-
-    let unsubscribes = [];
-
-    const loadSharedReports = async () => {
-      try {
-        const reports = await fetchReportsByAssessmentRTDB(assessmentId);
-        setSharedReports(reports);
-        setAllComments([]);
-        
-        const reportIds = new Set([assessmentId]);
-        reports.forEach((report) => {
-          const reportId = report.id || report.report_id || report.assessment_id;
-          if (reportId) reportIds.add(reportId);
-        });
-
-        reportIds.forEach((reportId) => {
-          const unsubscribe = subscribeToReportComments(reportId, (comments) => {
-            setAllComments((prevComments) => {
-              const filtered = prevComments.filter((c) => c.reportId !== reportId);
-              return [...filtered, ...comments.map((c) => ({ ...c, reportId }))];
-            });
-          });
-          unsubscribes.push(unsubscribe);
-        });
-      } catch (err) {
-        console.error('Error loading shared reports:', err);
-      }
-    };
-
-    loadSharedReports();
-
-    return () => {
-      unsubscribes.forEach((unsub) => {
-        if (unsub) unsub();
-      });
-    };
-  }, [assessmentId, user?.role]);
+  // useEffect(() => {
+  //   if (!assessmentId || user?.role === 'doctor') {
+  //     return;
+  //   }
+  // 
+  //   let unsubscribes = [];
+  // 
+  //   const loadSharedReports = async () => {
+  //     try {
+  //       const reports = await fetchReportsByAssessmentRTDB(assessmentId);
+  //       setSharedReports(reports);
+  //       setAllComments([]);
+  //       
+  //       const reportIds = new Set([assessmentId]);
+  //       reports.forEach((report) => {
+  //         const reportId = report.id || report.report_id || report.assessment_id;
+  //         if (reportId) reportIds.add(reportId);
+  //       });
+  // 
+  //       reportIds.forEach((reportId) => {
+  //         const unsubscribe = subscribeToReportComments(reportId, (comments) => {
+  //           setAllComments((prevComments) => {
+  //             const filtered = prevComments.filter((c) => c.reportId !== reportId);
+  //             return [...filtered, ...comments.map((c) => ({ ...c, reportId }))];
+  //           });
+  //         });
+  //         unsubscribes.push(unsubscribe);
+  //       });
+  //     } catch (err) {
+  //       console.error('Error loading shared reports:', err);
+  //     }
+  //   };
+  // 
+  //   loadSharedReports();
+  // 
+  //   return () => {
+  //     unsubscribes.forEach((unsub) => {
+  //       if (unsub) unsub();
+  //     });
+  //   };
+  // }, [assessmentId, user?.role]);
 
   // Handlers
   const handleBack = () => {
@@ -90,13 +89,13 @@ function AssessmentResults() {
     navigate('/assessment-history');
   };
 
-  const handleShareSuccess = () => {
-    setShowShareModal(false);
-    // Reload shared reports
-    if (user?.id) {
-      fetchReportsByAssessmentRTDB(assessmentId).then(setSharedReports).catch(console.error);
-    }
-  };
+  // const handleShareSuccess = () => {
+  //   setShowShareModal(false);
+  //   // Reload shared reports
+  //   if (user?.id) {
+  //     fetchReportsByAssessmentRTDB(assessmentId).then(setSharedReports).catch(console.error);
+  //   }
+  // };
 
   const renderText = (value, fallback = '') => {
     if (value === null || value === undefined) return fallback;
@@ -252,7 +251,7 @@ function AssessmentResults() {
             )}
           </div> */}
 
-          {/* Optional: Manual sharing as backup */}
+          {/* Optional: Manual sharing as backup
           {user?.role !== 'doctor' && !assignedDoctorId && (
             <div className="doctor-feedback-section">
               <h3>Share Report Manually</h3>
@@ -263,7 +262,7 @@ function AssessmentResults() {
                 Share with a Doctor
               </button>
             </div>
-          )}
+          )} */}
 
           <div className="disclaimer-box">
             <p>
