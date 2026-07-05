@@ -18,13 +18,29 @@ from datetime import datetime, timezone
 from functools import wraps
 import logging
 
+import sys
+import builtins
+
+def safe_print(*args, **kwargs):
+    try:
+        builtins.print(*args, **kwargs)
+    except UnicodeEncodeError:
+        sep = kwargs.get('sep', ' ')
+        text = sep.join(str(arg) for arg in args)
+        encoding = sys.stdout.encoding or 'ascii'
+        encoded_text = text.encode(encoding, errors='replace').decode(encoding)
+        builtins.print(encoded_text, **kwargs)
+
+print = safe_print
+
 app = Flask(__name__)
 
 # Allow the frontend to call this API from local development hosts and production deployments.
 DEFAULT_CORS_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "*", # Safe fallback for frontend deployments (e.g. Vercel, Netlify)
+    "https://heartrisk-e5re.vercel.app",
+    # Note: wildcard origins removed for stricter security in production.
 ]
 cors_origins = [
     origin.strip() for origin in os.getenv("CORS_ORIGINS", ",".join(DEFAULT_CORS_ORIGINS)).split(",") if origin.strip()
@@ -1161,6 +1177,17 @@ if __name__ == '__main__':
 
     if load_assets():
         print("\n🎯 All systems ready!\n")
-        app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")), debug=os.getenv("FLASK_DEBUG", "false").lower() == "true")
+
+        # Read port from environment (Railway sets PORT). Default to 5000 for local dev.
+        try:
+            port = int(os.getenv("PORT", "5000"))
+        except ValueError:
+            port = 5000
+
+        debug_mode = os.getenv("FLASK_DEBUG", "false").lower() == "true"
+        logger.info("Starting Flask on 0.0.0.0:%s (debug=%s). CORS origins=%s", port, debug_mode, cors_origins)
+
+        # Bind to 0.0.0.0 so external hosts (Railway) can reach the server.
+        app.run(host="0.0.0.0", port=port, debug=debug_mode)
     else:
         print("\n❌ Failed to load ML assets. Exiting.\n")
