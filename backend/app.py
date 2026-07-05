@@ -20,10 +20,11 @@ import logging
 
 app = Flask(__name__)
 
-# Allow the frontend to call this API from local development hosts.
+# Allow the frontend to call this API from local development hosts and production deployments.
 DEFAULT_CORS_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "*", # Safe fallback for frontend deployments (e.g. Vercel, Netlify)
 ]
 cors_origins = [
     origin.strip() for origin in os.getenv("CORS_ORIGINS", ",".join(DEFAULT_CORS_ORIGINS)).split(",") if origin.strip()
