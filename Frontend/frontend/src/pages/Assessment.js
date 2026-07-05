@@ -123,11 +123,10 @@ function Assessment() {
           },
         });
       } else {
-        // Surface backend error fields (many endpoints use `error` or `details` keys)
+        // Log full server response for debugging and surface meaningful fields
         console.error('❌ [ASSESSMENT] Server returned error:', result);
         const serverMsg = result.error || result.details || result.message || 'Failed to get prediction';
         setError(serverMsg);
-      }
       }
     } catch (err) {
       setError('Unable to connect to server. Please ensure Flask is running.');
